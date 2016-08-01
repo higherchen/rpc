@@ -1,6 +1,6 @@
 {
     "name": "higherchen/rpc",
-    "description": "Bilibili async service.",
+    "description": "Swoole rpc server.",
     "authors": [
         {
             "name": "higher",
