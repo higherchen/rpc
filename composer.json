@@ -1,0 +1,20 @@
+{
+    "name": "bilibili-php/async",
+    "description": "Bilibili async service.",
+    "authors": [
+        {
+            "name": "higher",
+            "email": "higerchen@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.10"
+    },
+    "autoload": {
+        "psr-4": {
+            "Thrift\\": "Thrift/",
+            "Swoole\\": "Swoole/"
+        }
+    },
+    "minimum-stability": "dev"
+}
