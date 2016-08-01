@@ -23,9 +23,9 @@ class DBPool
 
     public function getFreeWorker()
     {
-        \bsf\Log\Log::debug('Idle pool size:'.count($this->idle_tasks));
+        \Swoole\Log::debug('Idle pool size:'.count($this->idle_tasks));
         $task_id = array_shift($this->idle_tasks);
-        \bsf\Log\Log::debug('Get worker! id:'.$task_id);
+        \Swoole\Log::debug('Get worker! id:'.$task_id);
 
         return $task_id;
     }

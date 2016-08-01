@@ -1,6 +1,6 @@
 <?php
 
-namespace bsf\Database;
+namespace Swoole\Database;
 
 /**
  * PDO连接类 维护prepare statement.
@@ -16,7 +16,7 @@ class PDOClient
     public static function connect($config, $reconnect = false)
     {
         if (static::$_link === null || $reconnect || static::isExpired(@$config['timeout'])) {
-            \bsf\Log\Log::debug(__CLASS__.' init pdo!');
+            \Swoole\Log::debug(__CLASS__.' init pdo!');
 
             if (!isset($config['options'][\PDO::MYSQL_ATTR_INIT_COMMAND])) {
                 $config['options'][\PDO::MYSQL_ATTR_INIT_COMMAND] = 'SET NAMES utf8';

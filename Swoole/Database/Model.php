@@ -1,6 +1,6 @@
 <?php
 
-namespace bsf\Database;
+namespace Swoole\Database;
 
 class Model
 {

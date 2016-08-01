@@ -2,6 +2,7 @@
 
 namespace Swoole\Database;
 
+/* need to be rewrite */
 class Controller
 {
     protected $_data;
