@@ -9,6 +9,7 @@ class Server extends TSimpleServer
 {
     protected $processor = null;
     protected $serv = null;
+    protected $name = null;
 
     protected $service = ['processor' => '', 'handler' => '', 'host' => '127.0.0.1', 'port' => 8091];
     protected $swoole_config = [
@@ -23,6 +24,20 @@ class Server extends TSimpleServer
 
     public function onStart()
     {
+        $prefix = $this->name ? $this->name.': ' : '';
+        swoole_set_process_name($prefix.'master process');
+    }
+
+    public function onManagerStart()
+    {
+        $prefix = $this->name ? $this->name.': ' : '';
+        swoole_set_process_name($prefix.'manager process');
+    }
+
+    public function onWorkerStart()
+    {
+        $prefix = $this->name ? $this->name.': ' : '';
+        swoole_set_process_name($prefix.'worker process');
     }
 
     /**
@@ -34,10 +49,14 @@ class Server extends TSimpleServer
      */
     public function configure($config)
     {
+        if (isset($config['name'])) {
+            $this->name = $config['name'];
+            unset($config['name']);
+        }
         foreach ($config as $key => $value) {
             if (isset($this->service[$key]) && $value) {
                 $this->service[$key] = $value;
-            } elseif (isset($this->swoole_config[$key]) && $value) {
+            } elseif ($value) {
                 $this->swoole_config[$key] = $value;
             }
         }
@@ -70,7 +89,9 @@ class Server extends TSimpleServer
 
     public function serve()
     {
-        $this->serv->on('workerStart', [$this, 'onStart']);
+        $this->serv->on('Start', [$this, 'onStart']);
+        $this->serv->on('ManagerStart', [$this, 'onManagerStart']);
+        $this->serv->on('WorkerStart', [$this, 'onWorkerStart']);
         $this->serv->on('receive', [$this, 'onReceive']);
         $this->serv->set($this->swoole_config);
         $this->serv->start();
