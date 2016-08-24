@@ -8,8 +8,9 @@ use Thrift\Server\TSimpleServer;
 class Server extends TSimpleServer
 {
     protected $processor = null;
+    protected $serv = null;
 
-    protected $service = ['name' => 'Index', 'host' => '127.0.0.1', 'port' => 8091];
+    protected $service = ['processor' => '', 'handler' => '', 'host' => '127.0.0.1', 'port' => 8091];
     protected $swoole_config = [
         'worker_num' => 1,
         'dispatch_mode' => 1,               // 1: 轮循, 3: 争抢
@@ -22,7 +23,6 @@ class Server extends TSimpleServer
 
     public function onStart()
     {
-        echo "Thrift Server Start\n";
     }
 
     /**
@@ -42,14 +42,15 @@ class Server extends TSimpleServer
             }
         }
 
+        $this->serv = new \swoole_server($this->service['host'], $this->service['port']);
+
         return $this;
     }
 
     public function onReceive($serv, $fd, $from_id, $data)
     {
-        $name = $this->service['name'];
-        $processor_class = '\\Services\\'.$name.'\\'.$name.'Processor';
-        $handler_class = '\\Services\\'.$name.'\\Handler';
+        $processor_class = $this->service['processor'];
+        $handler_class = $this->service['handler'];
 
         $handler = new $handler_class();
         $this->processor = new $processor_class($handler);
@@ -69,10 +70,9 @@ class Server extends TSimpleServer
 
     public function serve()
     {
-        $serv = new \swoole_server($this->service['host'], $this->service['port']);
-        $serv->on('workerStart', [$this, 'onStart']);
-        $serv->on('receive', [$this, 'onReceive']);
-        $serv->set($this->swoole_config);
-        $serv->start();
+        $this->serv->on('workerStart', [$this, 'onStart']);
+        $this->serv->on('receive', [$this, 'onReceive']);
+        $this->serv->set($this->swoole_config);
+        $this->serv->start();
     }
 }
