@@ -21,5 +21,4 @@ $out_factory = $in_factory = new Thrift\Factory\TFramedTransportFactory();
 $out_protocol = $in_protocol = new Thrift\Factory\TBinaryProtocolFactory();
 
 $server = new Swoole\Thrift\Server($processor, $socket_tranport, $in_factory, $out_factory, $in_protocol, $out_protocol);
-$server->configure(['name' => 'HelloSwoole']);
-$server->serve();
+$server->configure(['processor' => '\\Services\\HelloSwoole\\HelloSwooleProcessor', 'handler' => '\\Services\\HelloSwoole\\Handler'])->serve();
