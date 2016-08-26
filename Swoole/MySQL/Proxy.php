@@ -40,8 +40,8 @@ class Proxy
         return static::$_pool_map[$name]->freeWorker($task_id);
     }
 
-    public function onTask($serv, $task_id, $from_id, $data)
+    public function __call($method, $parameters)
     {
-
+        
     }
 }

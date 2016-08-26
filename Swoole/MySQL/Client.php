@@ -4,76 +4,26 @@ namespace Swoole\MySQL;
 
 /**
  * PDO连接类 维护prepare statement.
+ * Task单进程内连接
  *
  * @author higher
  */
 class Client
 {
-    protected static $_link;
-    protected static $_last_error;
-    protected static $last_timestamp;
+    protected static $_conn;            // 数据库连接
+    protected static $_stmt = [];       // prepare statement
 
-    public static function connect($config, $reconnect = false)
+    public static function getConnection($config)
     {
-        if (static::$_link === null || $reconnect || static::isExpired(@$config['timeout'])) {
-
-            if (!isset($config['options'][\PDO::MYSQL_ATTR_INIT_COMMAND])) {
-                $config['options'][\PDO::MYSQL_ATTR_INIT_COMMAND] = 'SET NAMES utf8';
-                $config['options'][\PDO::ATTR_PERSISTENT] = true;
-            }
-            static::$_link = [
-                'conn' => new \PDO($config['dsn'], $config['username'], $config['password'], $config['options']),
-                'stmt' => [],
-            ];
+        if (static::$_conn === null) {
+            static::$_conn = new \PDO($config['dsn'], $config['username'], $config['password'], $config['options']);
         }
 
-        static::refresh();
-
-        return static::$_link;
+        return static::$_conn;
     }
 
-    public static function getConn()
+    public function __call($method, $parameters)
     {
-        return static::$_link['conn'];
-    }
-
-    public static function getStmt($sql)
-    {
-        $md5 = md5($sql);
-        if (!isset(static::$_link['stmt'][$md5])) {
-            static::$_link['stmt'][$md5] = static::$_link['conn']->prepare($sql);
-        }
-
-        return static::$_link['stmt'][$md5];
-    }
-
-    public static function isExpired($timeout)
-    {
-        if (static::$last_timestamp && isset($timeout) && $timeout != 0) {
-            return (time() - static::$last_timestamp) > $timeout;
-        }
-
-        return false;
-    }
-
-    public static function refresh()
-    {
-        static::$last_timestamp = time();
-    }
-
-    public static function lastError($error = null)
-    {
-        if ($error === null) {
-            return static::$_last_error;
-        } else {
-            static::$_last_error = $error;
-        }
-    }
-
-    public static function isAway()
-    {
-        $error = static::lastError();
-
-        return $error['code'] == 'HY000';
+        
     }
 }
