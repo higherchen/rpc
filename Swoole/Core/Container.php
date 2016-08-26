@@ -16,7 +16,9 @@ class Container
     {
         if (!isset($this->_services[$alias])) {
             $this->_services[$alias] = $instance;
+            return true;
         }
+        return false;
     }
 
     public function singleton($alias, $parameters = [])
