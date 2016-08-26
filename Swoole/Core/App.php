@@ -4,14 +4,23 @@ namespace Swoole\Core;
 
 class App
 {
-    public function __construct($config)
+    protected $config;
+    protected $swoole_config;
+
+    public function __construct($config, $swoole_config)
     {
         Di::set('config', $config);
+        Di::set('swoole_config', $swoole_config);
+        Di::set(
+            'server', function () {
+                return new Server();
+            }
+        );
     }
 
     public function initRPC($processor)
     {
-        $socket_tranport = new \Thrift\Server\TServerSocket(Di::get('host'), Di::get('port'));
+        $socket_tranport = new \Thrift\Server\TServerSocket(Di::get('config')['host'], Di::get('config')['port']);
         $out_factory = $in_factory = new \Thrift\Factory\TFramedTransportFactory();
         $out_protocol = $in_protocol = new \Thrift\Factory\TBinaryProtocolFactory();
 
@@ -19,13 +28,14 @@ class App
         Di::set('receive', [$server, 'onReceive']);
     }
 
-    public function initMySQL()
+    public function initMySQL($db_config)
     {
+        $proxy = new \Swoole\MySQL\Proxy($db_config);
+        Di::set('task', [$proxy, 'onTask']);
     }
 
     public function run()
     {
-        $server = new Server();
-        $server->serve();
+        Di::singleton('server')->serve();
     }
 }

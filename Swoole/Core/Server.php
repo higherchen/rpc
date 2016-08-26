@@ -12,56 +12,41 @@ class Server
     protected $serv = null;
 
     /**
+     * The Swoole Server Config.
+     *
+     * @var array
+     */
+    protected $swoole_config = null;
+
+    /**
      * The Process Name.
      *
      * @var string
      */
     protected $name = null;
 
-    protected $config = ['host' => '127.0.0.1', 'port' => 8091];
-    protected $swoole_config = [];
-
-    /**
-     * Swoole server configure.
-     *
-     * @param array $config Collection of swoole server config
-     *
-     * @return int The number of routes handled
-     */
-    public function __construct()
+    public function configure($key, $value)
     {
-        $config = Di::get('config');
-        if (isset($config['name'])) {
-            $this->name = $config['name'];
-            unset($config['name']);
-        }
-        foreach ($config as $key => $value) {
-            if (isset($this->config[$key]) && $value) {
-                $this->config[$key] = $value;
-            } elseif ($value) {
-                $this->swoole_config[$key] = $value;
-            }
-        }
-
+        $this->swoole_config[$key] = $value;
         return $this;
     }
 
     public function onStart()
     {
         $prefix = $this->name ? $this->name.': ' : '';
-        swoole_set_process_name($prefix.'master process');
+        swoole_set_process_name($prefix.'rpc master');
     }
 
     public function onManagerStart()
     {
         $prefix = $this->name ? $this->name.': ' : '';
-        swoole_set_process_name($prefix.'manager process');
+        swoole_set_process_name($prefix.'rpc manager');
     }
 
     public function onWorkerStart()
     {
         $prefix = $this->name ? $this->name.': ' : '';
-        swoole_set_process_name($prefix.'worker process');
+        swoole_set_process_name($prefix.'rpc worker');
     }
 
     public function onReceive($serv, $fd, $from_id, $data)
@@ -71,7 +56,8 @@ class Server
 
     public function serve()
     {
-        $this->serv = new \swoole_server($this->config['host'], $this->config['port']);
+        $config = Di::get('config');
+        $this->serv = new \swoole_server($config['host'], $config['port']);
         $support_callback = [
             'start' => [$this, 'onStart'],
             'managerStart' => [$this, 'onManagerStart'],

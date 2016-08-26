@@ -12,9 +12,9 @@ class Container
         return isset($this->_services[$alias]) ? $this->_services[$alias] : null;
     }
 
-    public function set($alias, $instance)
+    public function set($alias, $instance, $rewrite = false)
     {
-        if (!isset($this->_services[$alias])) {
+        if (!isset($this->_services[$alias]) || !$rewrite) {
             $this->_services[$alias] = $instance;
             return true;
         }
@@ -27,8 +27,8 @@ class Container
             return $this->instances[$alias];
         }
 
-        if (isset($_services[$alias]) && is_callable($_services[$alias])) {
-            $object = call_user_func_array($_services[$alias], $parameters);
+        if (isset($this->_services[$alias]) && is_callable($this->_services[$alias])) {
+            $object = call_user_func_array($this->_services[$alias], $parameters);
         } else {
             $class = new \ReflectionClass($alias);
             $object = $class->newInstanceArgs($parameters);
