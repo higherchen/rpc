@@ -2,46 +2,50 @@
 
 namespace Swoole\MySQL;
 
+use Swoole\Core\Di;
+
 class Proxy
 {
-    protected static $_config_map;
-    protected static $_pool_map;
 
     public function __construct($db_config)
     {
+        $_config_map = $_pool_map = $_task_map = [];
         $task_worker_num = 0;
 
         foreach ($db_config as $name => $item) {
             $maxconn = $item['maxconn'];
-            static::$_pool_map[$name] = range($task_worker_num, $task_worker_num + $maxconn - 1);
+            $_pool_map[$name] = range($task_worker_num, $task_worker_num + $maxconn - 1);
+            $_task_map += array_fill($task_worker_num, $maxconn, $name);
             $task_worker_num += $maxconn;
-            static::$_config_map[$name] = [
+            $_config_map[$name] = [
                 'dsn' => $item['dsn'],
                 'username' => $item['username'],
                 'password' => $item['password'],
-                'timeout' => $item['timeout'],
+                'options' => $item['options'],
             ];
         }
 
-        foreach (static::$_pool_map as $name => $task_ids) {
-            static::$_pool_map[$name] = new Pool($task_ids);
+        foreach ($_pool_map as $name => $task_ids) {
+            $_pool_map[$name] = new Pool($task_ids);
         }
 
-        Di::singleton('server')->configure('task_worker_num', $task_worker_num);
+        Di::set('pool_map', $_pool_map);
+        Di::set('config_map', $_config_map);
+        Di::set('task_map', $_task_map);
+
+        Di::get('server')->configure('task_worker_num', $task_worker_num);
     }
 
-    public static function getFreeTask($name)
+    public function onTask($serv, $task_id, $from_id, $data)
     {
-        return static::$_pool_map[$name]->getFreeWorker();
+        static $conn = null;
+        if ($conn == null) {
+            $name = Di::get('task_map')[$task_id];
+            $config = Di::get('config_map')[$name];
+            $conn = new \PDO($config['dsn'], $config['username'], $config['password'], $config['options']);
+        }
+        // 将data、conn传入解析模块
+        return (new Resolve($conn, $data))->run();
     }
 
-    public static function freeTask($name, $task_id)
-    {
-        return static::$_pool_map[$name]->freeWorker($task_id);
-    }
-
-    public function __call($method, $parameters)
-    {
-        
-    }
 }

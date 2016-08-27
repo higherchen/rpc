@@ -2,28 +2,68 @@
 
 namespace Swoole\MySQL;
 
-/**
- * PDO连接类 维护prepare statement.
- * Task单进程内连接
- *
- * @author higher
- */
 class Client
 {
-    protected static $_conn;            // 数据库连接
-    protected static $_stmt = [];       // prepare statement
+    // db name
+    protected $database;
+    
+    // prepared
+    protected $prepared = false;
 
-    public static function getConnection($config)
+    // trans
+    protected $trans = false;
+
+    // message
+    protected $message;
+
+    // ready
+    protected $ready = true;
+
+    public function __construct($database)
     {
-        if (static::$_conn === null) {
-            static::$_conn = new \PDO($config['dsn'], $config['username'], $config['password'], $config['options']);
-        }
+        $this->database = $database;
+    }
 
-        return static::$_conn;
+    public function prepare($statement, $options = [])
+    {
+        $this->prepared = true;
+        $this->ready = false;
+        $this->message[] = ['prepare' => [$statement, $options]];
+        return $this;
+    }
+
+    public function beginTransaction()
+    {
+        $this->chains = true;
+        $this->ready = false;
+        $this->message[] = ['beginTransaction' => null];
+        return $this;
     }
 
     public function __call($method, $parameters)
     {
-        
+        // If transaction
+        if ($this->chains) {
+            if ($method != 'commit') {
+                $this->message[] = [$method, $parameters];
+            } else {
+                $this->ready = true;
+            }
+        }
+
+        // If prepared
+        if ($this->prepared && $method == 'excute') {
+            $this->message[] = ['execute', $parameters];
+            $this->ready = true;
+        }
+
+        if ($this->ready) {
+            $task_id = Di::get('pool_map')[$this->database]->getFreeResource();
+            $response = Di::get('server')->getServ()->taskwait($this->message, 0.5, $task_id);
+            Di::get('pool_map')[$this->database]->freeResource($task_id);
+            return $response;
+        }
+
+        return $this;
     }
 }

@@ -4,18 +4,18 @@ namespace Swoole\Core;
 
 class Container
 {
-    protected $_services = [];
-    protected $_instances = [];
+    protected $services = [];
+    protected $instances = [];
 
     public function get($alias)
     {
-        return isset($this->_services[$alias]) ? $this->_services[$alias] : null;
+        return isset($this->services[$alias]) ? $this->services[$alias] : null;
     }
 
     public function set($alias, $instance, $rewrite = false)
     {
-        if (!isset($this->_services[$alias]) || !$rewrite) {
-            $this->_services[$alias] = $instance;
+        if (!isset($this->services[$alias]) || !$rewrite) {
+            $this->services[$alias] = $instance;
             return true;
         }
         return false;
@@ -27,8 +27,8 @@ class Container
             return $this->instances[$alias];
         }
 
-        if (isset($this->_services[$alias]) && is_callable($this->_services[$alias])) {
-            $object = call_user_func_array($this->_services[$alias], $parameters);
+        if (isset($this->services[$alias]) && is_callable($this->services[$alias])) {
+            $object = call_user_func_array($this->services[$alias], $parameters);
         } else {
             $class = new \ReflectionClass($alias);
             $object = $class->newInstanceArgs($parameters);
@@ -47,8 +47,8 @@ class Container
             return $this->instances[$alias];
         }
 
-        if (isset($_services[$alias]) && is_callable($_services[$alias])) {
-            $object = call_user_func_array($_services[$alias], $parameters);
+        if (isset($this->services[$alias]) && is_callable($this->services[$alias])) {
+            $object = call_user_func_array($this->services[$alias], $parameters);
         } else {
             $class = new \ReflectionClass($alias);
             $object = $class->newInstanceArgs($parameters);

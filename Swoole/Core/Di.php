@@ -4,14 +4,14 @@ namespace Swoole\Core;
 
 class Di
 {
-    protected static $_instance;
+    protected static $instance;
 
     public static function __callStatic($method, $args)
     {
-        if (!static::$_instance) {
-            static::$_instance = new Container();
+        if (!static::$instance) {
+            static::$instance = new Container();
         }
-        $instance = static::$_instance;
+        $instance = static::$instance;
 
         switch (count($args)) {
         case 0:

@@ -25,10 +25,22 @@ class Server
      */
     protected $name = null;
 
+    public function __construct()
+    {
+        $config = Di::get('config');
+        $this->swoole_config = Di::get('swoole_config');
+        $this->serv = new \swoole_server($config['host'], $config['port']);
+    }
+
     public function configure($key, $value)
     {
         $this->swoole_config[$key] = $value;
         return $this;
+    }
+
+    public function getServ()
+    {
+        return $this->serv;
     }
 
     public function onStart()
@@ -56,8 +68,6 @@ class Server
 
     public function serve()
     {
-        $config = Di::get('config');
-        $this->serv = new \swoole_server($config['host'], $config['port']);
         $support_callback = [
             'start' => [$this, 'onStart'],
             'managerStart' => [$this, 'onManagerStart'],

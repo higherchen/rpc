@@ -11,11 +11,7 @@ class App
     {
         Di::set('config', $config);
         Di::set('swoole_config', $swoole_config);
-        Di::set(
-            'server', function () {
-                return new Server();
-            }
-        );
+        Di::set('server', new Server());
     }
 
     public function initRPC($processor)
@@ -36,6 +32,6 @@ class App
 
     public function run()
     {
-        Di::singleton('server')->serve();
+        Di::get('server')->serve();
     }
 }
