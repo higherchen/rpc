@@ -57,6 +57,8 @@ class Client
         $task_id = Di::get('pool_map')[$this->database]->getFreeResource();
         $response = Di::get('server')->getServ()->taskwait($data, 0.5, $task_id);
         Di::get('pool_map')[$this->database]->freeResource($task_id);
+        $this->trans = false;
+        $this->message = null;
         return $response;
     }
 }
