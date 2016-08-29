@@ -2,68 +2,61 @@
 
 namespace Swoole\MySQL;
 
+use Swoole\Core\Di;
+
 class Client
 {
     // db name
     protected $database;
-    
-    // prepared
-    protected $prepared = false;
 
-    // trans
+    // transaction
     protected $trans = false;
 
-    // message
     protected $message;
-
-    // ready
-    protected $ready = true;
 
     public function __construct($database)
     {
         $this->database = $database;
     }
 
-    public function prepare($statement, $options = [])
+    public function query($statement, $options = [])
     {
-        $this->prepared = true;
-        $this->ready = false;
-        $this->message[] = ['prepare' => [$statement, $options]];
-        return $this;
+        $this->message = ['query', $statement, $options];
+        return $this->call();
+    }
+
+    public function queryRow($statement, $options = [])
+    {
+        $this->message = ['queryRow', $statement, $options];
+        return $this->call();
+    }
+
+    public function execute($statement, $options = [])
+    {
+        if ($this->trans) {
+            $this->message[] = ['execute', $statement, $options];
+        } else {
+            $this->message = ['execute', $statement, $options];
+            return $this->call();
+        }
     }
 
     public function beginTransaction()
     {
-        $this->chains = true;
-        $this->ready = false;
-        $this->message[] = ['beginTransaction' => null];
-        return $this;
+        $this->trans = true;
     }
 
-    public function __call($method, $parameters)
+    public function commit()
     {
-        // If transaction
-        if ($this->chains) {
-            if ($method != 'commit') {
-                $this->message[] = [$method, $parameters];
-            } else {
-                $this->ready = true;
-            }
-        }
+        return $this->call();
+    }
 
-        // If prepared
-        if ($this->prepared && $method == 'excute') {
-            $this->message[] = ['execute', $parameters];
-            $this->ready = true;
-        }
-
-        if ($this->ready) {
-            $task_id = Di::get('pool_map')[$this->database]->getFreeResource();
-            $response = Di::get('server')->getServ()->taskwait($this->message, 0.5, $task_id);
-            Di::get('pool_map')[$this->database]->freeResource($task_id);
-            return $response;
-        }
-
-        return $this;
+    protected function call()
+    {
+        $data = ['trans' => $this->trans, 'query' => $this->message];
+        $task_id = Di::get('pool_map')[$this->database]->getFreeResource();
+        $response = Di::get('server')->getServ()->taskwait($data, 0.5, $task_id);
+        Di::get('pool_map')[$this->database]->freeResource($task_id);
+        return $response;
     }
 }

@@ -3,6 +3,7 @@
 namespace Swoole\MySQL;
 
 use Swoole\Core\Di;
+use Swoole\Core\Pool;
 
 class Proxy
 {
