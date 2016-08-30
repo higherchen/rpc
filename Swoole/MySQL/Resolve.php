@@ -4,16 +4,23 @@ namespace Swoole\MySQL;
 
 class Resolve
 {
-    protected $conn;
+    
     protected $trans;
+    protected $error;
 
+    protected static $conn = null;
     protected static $stmts = [];
 
-    public function __construct($conn, $data) 
+    public function __construct($task_id, $data) 
     {
-        $this->conn = $conn;
+        // $this->conn = $conn;
         $this->trans = $data['trans'];
         $this->query = $data['query'];
+        $this->database = $data['database'];
+
+        if (static::$conn == null) {
+            
+        }
     }
 
     public function getStatement($sql)
@@ -26,29 +33,43 @@ class Resolve
         return static::$stmts[$mark];
     }
 
+    public function getError()
+    {
+        return $this->error;
+    }
+
     public function run()
     {
         if (!$this->trans) {
             // 非事务型
-            list($method, $sql, $options) = reset($this->query);
+            list($method, $sql, $options) = $this->query;
             $stmt = $this->getStatement($sql);
 
             switch ($method) {
             case 'query':
                 $stmt->execute($options);
-                return $stmt->fetchAll();
+                $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+                break;
             
             case 'queryRow':
                 $stmt->execute($options);
-                return $stmt->fetch(\PDO::FETCH_ASSOC);
+                $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+                break;
 
             case 'execute':
                 $stmt->execute($options);
-                return $stmt->rowCount();
+                $result = $stmt->rowCount();
+                break;
             
             default:
-                return false;
+                $result = false;
             }
+
+            $info = $stmt->errorInfo();
+            $this->error = ['code' => $info[0], 'info' => $info[2]];
+            
+            return $result;
+
         } else {
             // 事务型
             $this->conn->beginTransaction();
@@ -56,6 +77,8 @@ class Resolve
                 foreach ($this->query as $query) {
                     list($method, $sql, $options) = $query;
                     $this->conn->exec($sql);
+                    $info = $this->conn->errorInfo();
+                    $this->error = ['code' => $info[0], 'info' => $info[2]];
                 }
             } catch (\Exception $e) {
                 $this->conn->rollBack();

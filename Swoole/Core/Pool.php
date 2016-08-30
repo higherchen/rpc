@@ -14,7 +14,7 @@ class Pool
      *
      * @var unique array
      */
-    protected $idle_resources;
+    public $idle_resources;
 
     /**
      * All resources in pool.

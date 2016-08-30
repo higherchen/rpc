@@ -28,6 +28,7 @@ class App
     {
         $proxy = new \Swoole\MySQL\Proxy($db_config);
         Di::set('task', [$proxy, 'onTask']);
+        Di::set('finish', [$proxy, 'onFinish']);
     }
 
     public function run()

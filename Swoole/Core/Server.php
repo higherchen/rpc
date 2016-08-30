@@ -74,6 +74,7 @@ class Server
             'workerStart' => [$this, 'onWorkerStart'],
             'receive' => [$this, 'onReceive'],
             'task' => null,
+            'finish' => null,
         ];
         foreach ($support_callback as $name => $callback) {
             
