@@ -9,13 +9,17 @@ class Client
     // db name
     protected $database;
 
+    // db config
+    protected $config;
+
     // transaction
     protected $trans = false;
 
     protected $message;
 
-    public function __construct($database = 'default')
+    public function __construct($config, $database = 'default')
     {
+        $this->config = $config;
         $this->database = $database;
     }
 
@@ -53,7 +57,12 @@ class Client
 
     protected function call()
     {
-        $data = ['trans' => $this->trans, 'query' => $this->message, 'database' => $this->database];
+        $data = [
+            'trans' => $this->trans,
+            'query' => $this->message,
+            'database' => $this->database,
+            'config' => $this->config,
+        ];
         $task_id = Di::get('pool_map')[$this->database]->getFreeResource();
         $response = Di::get('server')->getServ()->taskwait($data, 0.5, $task_id);
         Di::get('pool_map')[$this->database]->freeResource($task_id);

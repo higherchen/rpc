@@ -8,7 +8,8 @@ class Handler implements HelloSwooleIf
 {
     public function sendMessage(\Services\HelloSwoole\Message $msg)
     {
-        $client = new Client();
+        $config = include __DIR__.'/../../Conf/database.php';
+        $client = new Client($config['default'], 'default');
         $response = $client->query("SELECT * FROM user WHERE id = ?", [1]);
         var_dump($response);
 

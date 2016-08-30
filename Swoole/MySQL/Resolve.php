@@ -6,36 +6,36 @@ class Resolve
 {
     
     protected $trans;
-    protected $error;
+    protected $max_try = 1;
 
     protected static $conn = null;
     protected static $stmts = [];
 
     public function __construct($task_id, $data) 
     {
-        // $this->conn = $conn;
         $this->trans = $data['trans'];
         $this->query = $data['query'];
         $this->database = $data['database'];
-
-        if (static::$conn == null) {
-            
-        }
+        $this->config = $data['config'];
     }
+
+    public function getConnection() 
+    {
+        $config = $this->config;
+        if (static::$conn == null) {
+            static::$conn = new \PDO($config['dsn'], $config['username'], $config['password'], $config['options']);
+        }
+        return static::$conn;
+    } 
 
     public function getStatement($sql)
     {
         $mark = md5($sql);
         if (!isset(static::$stmts[$mark])) {
-            static::$stmts[$mark] = $this->conn->prepare($sql);
+            static::$stmts[$mark] = $this->getConnection()->prepare($sql);
         }
 
         return static::$stmts[$mark];
-    }
-
-    public function getError()
-    {
-        return $this->error;
     }
 
     public function run()
@@ -65,23 +65,26 @@ class Resolve
                 $result = false;
             }
 
-            $info = $stmt->errorInfo();
-            $this->error = ['code' => $info[0], 'info' => $info[2]];
+            $error = $stmt->errorInfo();
+            if ($error[0] == 'HY000' && $this->max_try > 0) {
+                static::$conn = null;
+                static::$stmts = [];
+                $this->max_try--;
+                return $this->run();
+            }
             
-            return $result;
+            return ['code' => $error[0], 'msg' => $error[2], 'data' => $result];
 
         } else {
             // 事务型
-            $this->conn->beginTransaction();
+            $this->getConnection()->beginTransaction();
             try {
                 foreach ($this->query as $query) {
                     list($method, $sql, $options) = $query;
-                    $this->conn->exec($sql);
-                    $info = $this->conn->errorInfo();
-                    $this->error = ['code' => $info[0], 'info' => $info[2]];
+                    $this->getConnection()->exec($sql);
                 }
             } catch (\Exception $e) {
-                $this->conn->rollBack();
+                $this->getConnection()->rollBack();
                 return false;
             }
             return true;
