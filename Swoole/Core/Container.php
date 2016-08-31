@@ -35,7 +35,7 @@ class Container
         }
 
         if ($object !== null) {
-            $this->instances[$abstract] = $object;
+            $this->instances[$alias] = $object;
         }
 
         return $object;
@@ -55,7 +55,7 @@ class Container
         }
 
         if ($shared && $object !== null) {
-            $this->instances[$abstract] = $object;
+            $this->instances[$alias] = $object;
         }
 
         return $object;
