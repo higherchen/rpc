@@ -20,9 +20,7 @@ $processor = new Services\HelloSwoole\HelloSwooleProcessor($service);
 
 $config = include __DIR__.'/Conf/config.php';
 $swoole_config = include __DIR__.'/Conf/swoole.php';
-$db_config = include __DIR__.'/Conf/database.php';
 
 $app = new App($config, $swoole_config);
 $app->initRPC($processor);
-$app->initMySQL($db_config);
 $app->run();

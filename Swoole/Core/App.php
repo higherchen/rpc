@@ -24,13 +24,6 @@ class App
         Di::set('receive', [$server, 'onReceive']);
     }
 
-    public function initMySQL($db_config)
-    {
-        $proxy = new \Swoole\MySQL\Proxy($db_config);
-        Di::set('task', [$proxy, 'onTask']);
-        Di::set('finish', [$proxy, 'onFinish']);
-    }
-
     public function run()
     {
         Di::get('server')->serve();
