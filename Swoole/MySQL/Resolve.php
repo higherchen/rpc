@@ -62,7 +62,7 @@ class Resolve
                 break;
             
             default:
-                $result = false;
+                return false;
             }
 
             $error = $stmt->errorInfo();
@@ -83,9 +83,10 @@ class Resolve
                     list($method, $sql, $options) = $query;
                     $this->getConnection()->exec($sql);
                 }
+                $this->getConnection()->commit();
             } catch (\Exception $e) {
                 $this->getConnection()->rollBack();
-                return false;
+                return ['code' => $e->getCode(), 'msg' => $e->getMessage()];
             }
             return true;
         }
