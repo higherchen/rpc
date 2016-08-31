@@ -30,33 +30,6 @@ class Proxy
 
     public function onTask($serv, $task_id, $from_id, $data)
     {
-        // try {
-        //     // 当前尝试次数
-        //     $times = 0;
-        //     $reconnect = false;
-        //     static $conn = null;
-
-        //     if ($conn == null) {
-        //         $name = Di::get('task_map')[$task_id];
-        //         $config = Di::get('config_map')[$name];
-        //         $conn = new \PDO($config['dsn'], $config['username'], $config['password'], $config['options']);
-        //     }
-
-        //     $handler = new Resolve($conn, $data);
-        //     $result = $handler->run();
-        //     $error = $handler->getError();
-
-        //     if ($error['code'] == 'HY000') {
-        //         $conn = null;
-        //     }
-            
-        //     return ['code' => $error['code'], 'msg' => $error['info'], 'data' => $result];
-        
-        // } catch (\PDOException $e) {
-
-        //     return ['code' => $e->getCode(), 'msg' => $e->getMessage()];
-
-        // }
         return (new Resolve($task_id, $data))->run();
     }
 
