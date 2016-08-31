@@ -28,6 +28,9 @@ class Server
     public function __construct()
     {
         $config = Di::get('config');
+        if (isset($config['name'])) {
+            $this->name = $config['name'];
+        }
         $this->swoole_config = Di::get('swoole_config');
         $this->serv = new \swoole_server($config['host'], $config['port']);
     }
