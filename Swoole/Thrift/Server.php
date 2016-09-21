@@ -5,6 +5,7 @@ namespace Swoole\Thrift;
 use Thrift;
 use Thrift\Server\TSimpleServer;
 use Swoole\Core\Di;
+use Swoole\Core\Logger;
 
 class Server extends TSimpleServer
 {
@@ -28,6 +29,7 @@ class Server extends TSimpleServer
             $protocol->fname = $config['name'];
             $processor->process($protocol, $protocol);
         } catch (\Exception $e) {
+            Logger::write(date('Y-m-d H:i:s').' ['.$e->getCode().'] '. $e->getMessage().PHP_EOL);
         }
     }
 }

@@ -58,15 +58,22 @@ class Server
         swoole_set_process_name($prefix.'rpc manager');
     }
 
-    public function onWorkerStart()
+    public function onWorkerStart($serv, $worker_id)
     {
         $prefix = $this->name ? $this->name.': ' : '';
         swoole_set_process_name($prefix.'rpc worker');
+
+        Logger::init("/tmp/{$this->name}-{$worker_id}.log");
     }
 
     public function onReceive($serv, $fd, $from_id, $data)
     {
 
+    }
+
+    public function onWorkerStop($serv, $worker_id)
+    {
+        Logger::reset();
     }
 
     public function serve()
